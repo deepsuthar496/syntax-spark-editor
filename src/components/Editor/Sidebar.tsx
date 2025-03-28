@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, FileText, Folder, FolderOpen, Code, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface FileNode {
   id: string;
@@ -87,11 +86,22 @@ const FileTree: React.FC<{
         <div key={file.id}>
           <div 
             className={cn(
-              "flex items-center py-1 px-2 hover:bg-sidebar-accent/50 rounded cursor-pointer",
-              selectedFile?.id === file.id && "bg-sidebar-accent text-sidebar-foreground"
+              "flex items-center py-1 px-2 hover:bg-sidebar-accent/30 rounded cursor-pointer",
+              selectedFile?.id === file.id && "bg-sidebar-accent/20 text-sidebar-foreground"
             )}
             onClick={() => file.type === 'folder' ? toggleFolder(file.id) : onFileSelect(file)}
           >
+            <div className="mr-1">
+              {file.type === 'folder' ? (
+                expandedFolders[file.id] ? (
+                  <ChevronDown size={16} className="text-muted-foreground" />
+                ) : (
+                  <ChevronRight size={16} className="text-muted-foreground" />
+                )
+              ) : (
+                <div className="w-4"></div>
+              )}
+            </div>
             <div className="mr-1.5">
               {file.type === 'folder' ? (
                 expandedFolders[file.id] ? (
@@ -103,7 +113,7 @@ const FileTree: React.FC<{
                 getFileIcon(file.name)
               )}
             </div>
-            <span className="truncate">{file.name}</span>
+            <span className="truncate text-sm">{file.name}</span>
           </div>
           {file.type === 'folder' && expandedFolders[file.id] && file.children && (
             <FileTree
@@ -126,11 +136,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onFileSelect, selectedFil
       case 'Explorer':
         return (
           <>
-            <div className="p-2 flex justify-between items-center">
-              <span className="font-medium text-xs uppercase">EXPLORER</span>
-              <Button variant="ghost" size="icon" className="h-5 w-5">
-                <ChevronDown size={16} />
-              </Button>
+            <div className="px-4 py-2 flex justify-between items-center text-xs uppercase tracking-wide">
+              <span className="font-medium opacity-80">Explorer</span>
+              <button className="opacity-70 hover:opacity-100">
+                <ChevronDown size={14} />
+              </button>
             </div>
             <div className="overflow-y-auto flex-grow">
               <FileTree 
@@ -149,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onFileSelect, selectedFil
             <input 
               type="text" 
               placeholder="Search in files..." 
-              className="w-full px-3 py-1.5 bg-sidebar-accent rounded text-sm"
+              className="w-full px-3 py-1.5 bg-sidebar-accent/30 rounded text-sm"
             />
             <div className="mt-4 text-xs text-muted-foreground">No results yet. Type to search.</div>
           </div>
@@ -168,10 +178,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onFileSelect, selectedFil
           <div className="p-4">
             <div className="text-sm font-medium mb-2">Settings</div>
             <div className="flex flex-col gap-2 mt-2">
-              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">User Settings</div>
-              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">Workspace Settings</div>
-              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">Keyboard Shortcuts</div>
-              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">Color Theme</div>
+              <div className="text-xs hover:bg-sidebar-accent/30 p-1 rounded cursor-pointer">User Settings</div>
+              <div className="text-xs hover:bg-sidebar-accent/30 p-1 rounded cursor-pointer">Workspace Settings</div>
+              <div className="text-xs hover:bg-sidebar-accent/30 p-1 rounded cursor-pointer">Keyboard Shortcuts</div>
+              <div className="text-xs hover:bg-sidebar-accent/30 p-1 rounded cursor-pointer">Color Theme</div>
             </div>
           </div>
         );

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Bell, Check, GitBranch, XCircle, Wifi, WifiOff } from 'lucide-react';
+import { Bell, GitBranch, XCircle, Wifi, WifiOff, Check, CircleDot } from 'lucide-react';
 import { 
   Tooltip, 
   TooltipContent, 
@@ -31,7 +31,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
   connected = true,
 }) => {
   return (
-    <div className="h-6 bg-sidebar flex items-center px-2 text-xs text-muted-foreground border-t border-border select-none">
+    <div className="h-5 bg-sidebar flex items-center px-2 text-xs text-muted-foreground border-t border-border select-none">
       <div className="flex-1 flex items-center space-x-3">
         <TooltipProvider>
           <Tooltip>
@@ -134,19 +134,6 @@ const StatusBar: React.FC<StatusBarProps> = ({
             </TooltipTrigger>
             <TooltipContent side="top">
               <span>Select End of Line Sequence</span>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="px-1.5 py-0.5 hover:bg-secondary rounded cursor-pointer">
-                <Bell size={14} />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              <span>Notifications</span>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

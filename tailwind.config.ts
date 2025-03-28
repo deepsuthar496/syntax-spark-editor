@@ -56,7 +56,6 @@ export default {
 				editor: {
 					background: 'hsl(var(--editor-background))',
 					foreground: 'hsl(var(--editor-foreground))',
-					line: 'hsl(var(--editor-line))',
 					comment: 'hsl(var(--editor-comment))',
 					string: 'hsl(var(--editor-string))',
 					variable: 'hsl(var(--editor-variable))',

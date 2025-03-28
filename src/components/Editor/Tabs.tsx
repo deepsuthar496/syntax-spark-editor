@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, CircleDot } from 'lucide-react';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FileTab {
@@ -54,29 +54,31 @@ const getTabIcon = (fileName: string) => {
 const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabSelect, onTabClose }) => {
   if (tabs.length === 0) {
     return (
-      <div className="h-10 bg-sidebar flex items-center border-b border-border px-4 text-sm text-muted-foreground">
+      <div className="h-9 bg-background flex items-center border-b border-border px-4 text-xs text-muted-foreground">
         No files open
       </div>
     );
   }
 
   return (
-    <div className="h-10 bg-sidebar flex items-center border-b border-border overflow-x-auto scrollbar-hide">
+    <div className="h-9 bg-background flex items-center border-b border-border overflow-x-auto scrollbar-hide">
       {tabs.map((tab) => (
         <div
           key={tab.id}
           className={cn(
-            "h-10 flex items-center px-3 border-r border-border cursor-pointer select-none group relative min-w-[120px] max-w-[180px]",
-            activeTab === tab.id ? "bg-background text-foreground border-t-2 border-t-primary border-b-0" : "bg-sidebar text-muted-foreground hover:bg-background/10"
+            "h-9 flex items-center px-3 border-r border-border cursor-pointer select-none group relative min-w-[120px] max-w-[180px]",
+            activeTab === tab.id ? 
+              "bg-editor-background text-foreground border-t-2 border-t-primary border-b-0" : 
+              "bg-background text-muted-foreground hover:bg-editor-background/50"
           )}
           onClick={() => onTabSelect(tab.id)}
         >
           <div className="mr-1.5">
             {getTabIcon(tab.name)}
           </div>
-          <span className="mr-1 text-sm truncate flex-1">
+          <span className="mr-1 text-xs truncate flex-1">
             {tab.name}
-            {tab.isDirty && <span className="ml-1 text-muted-foreground">•</span>}
+            {tab.isDirty && <span className="ml-1 text-white">•</span>}
           </span>
           <button
             className="opacity-0 group-hover:opacity-100 transition-opacity"

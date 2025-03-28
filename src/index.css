@@ -36,7 +36,7 @@
     --sidebar-ring: 262 83.3% 57.8%;
     
     /* Editor specific colors */
-    --editor-background: 240 10% 4.9%;
+    --editor-background: 240 10% 6.9%;
     --editor-foreground: 0 0% 90%;
     --editor-keyword: 330 90% 70%;
     --editor-string: 120 70% 55%;
@@ -184,26 +184,27 @@
 }
 
 .find-input {
-  @apply bg-sidebar-accent rounded px-2 py-1 text-sm w-64;
+  @apply bg-sidebar-accent/30 rounded px-2 py-1 text-sm w-64;
 }
 
 .find-button {
-  @apply p-1 rounded hover:bg-sidebar-accent;
+  @apply p-1 rounded hover:bg-sidebar-accent/30;
 }
 
 /* Improved VS Code-like gutter */
 .gutter {
-  @apply bg-editor-gutter-background border-r border-border;
+  background-color: hsl(var(--editor-gutter-background));
+  @apply border-r border-border;
 }
 
 /* Selection styles */
 ::selection {
-  @apply bg-editor-selection;
+  background-color: hsl(var(--editor-selection));
 }
 
 /* For VS Code-like line highlighting on active line */
 .line-highlight {
-  @apply bg-editor-line-highlight;
+  background-color: hsl(var(--editor-line-highlight));
 }
 
 /* Tab focus styling */
