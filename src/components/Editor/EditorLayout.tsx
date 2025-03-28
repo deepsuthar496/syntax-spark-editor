@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ActivityBar from './ActivityBar';
 import Sidebar from './Sidebar';
 import Tabs from './Tabs';
 import Monaco from './Monaco';
 import StatusBar from './StatusBar';
+import { useToast } from '@/hooks/use-toast';
 
 interface FileNode {
   id: string;
@@ -12,6 +13,7 @@ interface FileNode {
   type: 'file' | 'folder';
   language?: string;
   children?: FileNode[];
+  isOpen?: boolean;
 }
 
 interface FileTab {
@@ -19,35 +21,32 @@ interface FileTab {
   name: string;
   language?: string;
   content: string;
+  isDirty?: boolean;
 }
 
 const sampleContents: Record<string, { content: string; language: string }> = {
   '3': { 
     content: 
 `import React from 'react';
-import './App.css';
+import { Notifications } from '@xinternal/360-notifications'
+import injectSheet from 'react-jss'
+import zIndex from 'helpers/zindex'
 
-// Main App component
-function App() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Hello World</h1>
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <button onClick={() => setCount(count + 1)}>
-          Count is {count}
-        </button>
-      </header>
-    </div>
-  );
+const styles = {
+  container: {
+    composes: 'fixed r0 t0',
+    zIndex: zIndex.notificationLevel,
+  },
 }
 
-export default App;`, 
-    language: 'typescript' 
+const Notifications360Container = ({ classes }) => (
+  <div className={classes.container}>
+    <Notifications />
+  </div>
+)
+
+export default injectSheet(styles)(Notifications360Container)`, 
+    language: 'javascript' 
   },
   '4': { 
     content: 
@@ -88,7 +87,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 )`, 
-    language: 'typescript' 
+    language: 'javascript' 
   },
   '7': { 
     content: 
@@ -181,12 +180,62 @@ A modern VS Code clone built with React and Tailwind CSS.
   }
 };
 
+// Initial files structure
+const initialFiles: FileNode[] = [
+  {
+    id: '1',
+    name: 'CRA',
+    type: 'folder',
+    isOpen: true,
+    children: [
+      {
+        id: '2',
+        name: 'src',
+        type: 'folder',
+        isOpen: true,
+        children: [
+          { id: '3', name: 'Notifications360Container.js', type: 'file', language: 'javascript' },
+          { id: '4', name: 'index.css', type: 'file', language: 'css' },
+          { id: '5', name: 'main.tsx', type: 'file', language: 'typescript' },
+        ],
+      },
+      {
+        id: '6',
+        name: 'public',
+        type: 'folder',
+        children: [
+          { id: '7', name: 'index.html', type: 'file', language: 'html' },
+          { id: '8', name: 'favicon.ico', type: 'file' },
+        ],
+      },
+      { id: '9', name: 'package.json', type: 'file', language: 'json' },
+      { id: '10', name: 'tsconfig.json', type: 'file', language: 'json' },
+      { id: '11', name: 'README.md', type: 'file', language: 'markdown' },
+    ],
+  },
+  {
+    id: '12',
+    name: 'PROJECTS',
+    type: 'folder',
+    children: []
+  },
+  {
+    id: '13',
+    name: 'BOOKMARKS',
+    type: 'folder',
+    children: []
+  }
+];
+
 const EditorLayout: React.FC = () => {
+  const { toast } = useToast();
   const [activeItem, setActiveItem] = useState<string>('Explorer');
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
   const [openTabs, setOpenTabs] = useState<FileTab[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [files, setFiles] = useState<FileNode[]>(initialFiles);
   
+  // File system operations
   const handleFileSelect = (file: FileNode) => {
     if (file.type === 'file') {
       setSelectedFile(file);
@@ -205,7 +254,8 @@ const EditorLayout: React.FC = () => {
           id: file.id,
           name: file.name,
           language: file.language,
-          content: fileContent.content
+          content: fileContent.content,
+          isDirty: false
         };
         
         setOpenTabs([...openTabs, newTab]);
@@ -231,6 +281,40 @@ const EditorLayout: React.FC = () => {
   };
   
   const handleTabClose = (tabId: string) => {
+    // Check if tab has unsaved changes
+    const tab = openTabs.find(t => t.id === tabId);
+    if (tab?.isDirty) {
+      // Show confirmation dialog with toast
+      toast({
+        title: 'Unsaved changes',
+        description: `Do you want to save the changes made to ${tab.name}?`,
+        action: (
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => {
+                // Save the file and close the tab
+                handleSaveFile(tabId);
+                closeTab(tabId);
+              }}
+              className="px-3 py-1 bg-primary text-primary-foreground rounded"
+            >
+              Save
+            </button>
+            <button 
+              onClick={() => closeTab(tabId)}
+              className="px-3 py-1 bg-destructive text-destructive-foreground rounded"
+            >
+              Don't Save
+            </button>
+          </div>
+        ),
+      });
+    } else {
+      closeTab(tabId);
+    }
+  };
+  
+  const closeTab = (tabId: string) => {
     const newTabs = openTabs.filter(tab => tab.id !== tabId);
     setOpenTabs(newTabs);
     
@@ -255,6 +339,53 @@ const EditorLayout: React.FC = () => {
     }
   };
   
+  const handleFileChange = (content: string) => {
+    if (!activeTab) return;
+    
+    // Update the content of the active tab
+    setOpenTabs(prevTabs => 
+      prevTabs.map(tab => 
+        tab.id === activeTab 
+          ? { ...tab, content, isDirty: true } 
+          : tab
+      )
+    );
+  };
+  
+  const handleSaveFile = (tabId: string = activeTab || '') => {
+    if (!tabId) return;
+    
+    // Simulate saving the file
+    setOpenTabs(prevTabs => 
+      prevTabs.map(tab => 
+        tab.id === tabId 
+          ? { ...tab, isDirty: false } 
+          : tab
+      )
+    );
+    
+    toast({
+      title: 'File saved',
+      description: `Changes saved successfully.`,
+    });
+  };
+  
+  // For keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Save file: Ctrl+S
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        if (activeTab) {
+          handleSaveFile();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab]);
+  
   // Get the content for the active tab
   const activeContent = activeTab 
     ? openTabs.find(tab => tab.id === activeTab)?.content || ''
@@ -265,6 +396,17 @@ const EditorLayout: React.FC = () => {
     ? openTabs.find(tab => tab.id === activeTab)?.language || 'text'
     : 'text';
   
+  // Calculate editor stats
+  const currentLine = 1;
+  const currentColumn = 1;
+  const lineCount = activeContent.split('\n').length;
+  
+  // Get tab title with dirty indicator
+  const getTabTitle = () => {
+    const tab = openTabs.find(t => t.id === activeTab);
+    return tab ? (tab.isDirty ? `${tab.name} •` : tab.name) : '';
+  };
+  
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       <div className="flex-1 flex">
@@ -274,6 +416,7 @@ const EditorLayout: React.FC = () => {
           activeItem={activeItem}
           onFileSelect={handleFileSelect}
           selectedFile={selectedFile || undefined}
+          files={files}
         />
         
         <div className="flex-1 flex flex-col">
@@ -289,6 +432,7 @@ const EditorLayout: React.FC = () => {
               <Monaco 
                 content={activeContent} 
                 language={activeLanguage}
+                onChange={handleFileChange}
               />
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -308,6 +452,10 @@ const EditorLayout: React.FC = () => {
                       <span>Close a tab</span>
                       <span className="text-xs bg-secondary px-2 py-0.5 rounded">Click the x</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>Save a file</span>
+                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+S</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -316,9 +464,9 @@ const EditorLayout: React.FC = () => {
           
           <StatusBar 
             language={activeLanguage || "text"}
-            lineCount={activeContent.split('\n').length}
-            currentLine={1}
-            currentColumn={1}
+            lineCount={lineCount}
+            currentLine={currentLine}
+            currentColumn={currentColumn}
             encoding="UTF-8"
             indentation="Spaces: 2"
             eol="LF"

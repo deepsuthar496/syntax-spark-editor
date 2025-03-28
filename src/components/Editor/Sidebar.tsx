@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { ChevronDown, ChevronRight, FileText, Folder } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, ChevronRight, FileText, Folder, FolderOpen, Code, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -17,41 +17,36 @@ interface SidebarProps {
   activeItem: string;
   onFileSelect: (file: FileNode) => void;
   selectedFile?: FileNode;
+  files: FileNode[];
 }
 
-const initialFiles: FileNode[] = [
-  {
-    id: '1',
-    name: 'Project Files',
-    type: 'folder',
-    isOpen: true,
-    children: [
-      {
-        id: '2',
-        name: 'src',
-        type: 'folder',
-        isOpen: true,
-        children: [
-          { id: '3', name: 'App.tsx', type: 'file', language: 'typescript' },
-          { id: '4', name: 'index.css', type: 'file', language: 'css' },
-          { id: '5', name: 'main.tsx', type: 'file', language: 'typescript' },
-        ],
-      },
-      {
-        id: '6',
-        name: 'public',
-        type: 'folder',
-        children: [
-          { id: '7', name: 'index.html', type: 'file', language: 'html' },
-          { id: '8', name: 'favicon.ico', type: 'file' },
-        ],
-      },
-      { id: '9', name: 'package.json', type: 'file', language: 'json' },
-      { id: '10', name: 'tsconfig.json', type: 'file', language: 'json' },
-      { id: '11', name: 'README.md', type: 'file', language: 'markdown' },
-    ],
-  },
-];
+// Get icon for file based on extension
+const getFileIcon = (fileName: string) => {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+  
+  switch (extension) {
+    case 'js':
+      return <Code size={16} className="text-yellow-400" />;
+    case 'jsx':
+      return <Code size={16} className="text-yellow-400" />;
+    case 'ts':
+      return <Code size={16} className="text-blue-400" />;
+    case 'tsx':
+      return <Code size={16} className="text-blue-400" />;
+    case 'html':
+      return <Code size={16} className="text-orange-400" />;
+    case 'css':
+      return <Code size={16} className="text-purple-400" />;
+    case 'json':
+      return <Code size={16} className="text-yellow-400" />;
+    case 'md':
+      return <FileText size={16} className="text-white" />;
+    case 'ico':
+      return <File size={16} className="text-blue-400" />;
+    default:
+      return <FileText size={16} />;
+  }
+};
 
 const FileTree: React.FC<{
   files: FileNode[];
@@ -59,10 +54,10 @@ const FileTree: React.FC<{
   selectedFile?: FileNode;
   level?: number;
 }> = ({ files, onFileSelect, selectedFile, level = 0 }) => {
-  const [expandedFolders, setExpandedFolders] = React.useState<Record<string, boolean>>({});
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
 
   // Initialize expandedFolders based on isOpen property
-  React.useEffect(() => {
+  useEffect(() => {
     const initialExpandedState: Record<string, boolean> = {};
     const processNodes = (nodes: FileNode[]) => {
       nodes.forEach(node => {
@@ -97,18 +92,18 @@ const FileTree: React.FC<{
             )}
             onClick={() => file.type === 'folder' ? toggleFolder(file.id) : onFileSelect(file)}
           >
-            <div className="mr-1">
+            <div className="mr-1.5">
               {file.type === 'folder' ? (
                 expandedFolders[file.id] ? (
-                  <ChevronDown size={16} />
+                  <FolderOpen size={16} className="text-yellow-400" />
                 ) : (
-                  <ChevronRight size={16} />
+                  <Folder size={16} className="text-yellow-400" />
                 )
               ) : (
-                <FileText size={16} />
+                getFileIcon(file.name)
               )}
             </div>
-            <span>{file.name}</span>
+            <span className="truncate">{file.name}</span>
           </div>
           {file.type === 'folder' && expandedFolders[file.id] && file.children && (
             <FileTree
@@ -124,37 +119,73 @@ const FileTree: React.FC<{
   );
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ activeItem, onFileSelect, selectedFile }) => {
-  const [files, setFiles] = React.useState<FileNode[]>(initialFiles);
-
-  if (activeItem !== 'Explorer') {
-    return (
-      <div className="w-64 bg-sidebar border-r border-border p-4">
-        <div className="text-lg font-medium mb-4">{activeItem}</div>
-        <div className="text-sm text-muted-foreground">
-          {activeItem === 'Search' && "Search across files"}
-          {activeItem === 'Source Control' && "No source control providers registered"}
-          {activeItem === 'Settings' && "Editor preferences and configurations"}
-        </div>
-      </div>
-    );
-  }
+const Sidebar: React.FC<SidebarProps> = ({ activeItem, onFileSelect, selectedFile, files }) => {
+  // Return appropriate content based on active item
+  const renderSidebarContent = () => {
+    switch (activeItem) {
+      case 'Explorer':
+        return (
+          <>
+            <div className="p-2 flex justify-between items-center">
+              <span className="font-medium text-xs uppercase">EXPLORER</span>
+              <Button variant="ghost" size="icon" className="h-5 w-5">
+                <ChevronDown size={16} />
+              </Button>
+            </div>
+            <div className="overflow-y-auto flex-grow">
+              <FileTree 
+                files={files} 
+                onFileSelect={onFileSelect} 
+                selectedFile={selectedFile} 
+              />
+            </div>
+          </>
+        );
+      
+      case 'Search':
+        return (
+          <div className="p-4">
+            <div className="text-sm font-medium mb-2">Search</div>
+            <input 
+              type="text" 
+              placeholder="Search in files..." 
+              className="w-full px-3 py-1.5 bg-sidebar-accent rounded text-sm"
+            />
+            <div className="mt-4 text-xs text-muted-foreground">No results yet. Type to search.</div>
+          </div>
+        );
+      
+      case 'Source Control':
+        return (
+          <div className="p-4">
+            <div className="text-sm font-medium mb-2">Source Control</div>
+            <div className="mt-2 text-xs text-muted-foreground">No source control providers registered</div>
+          </div>
+        );
+      
+      case 'Settings':
+        return (
+          <div className="p-4">
+            <div className="text-sm font-medium mb-2">Settings</div>
+            <div className="flex flex-col gap-2 mt-2">
+              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">User Settings</div>
+              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">Workspace Settings</div>
+              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">Keyboard Shortcuts</div>
+              <div className="text-xs hover:bg-sidebar-accent p-1 rounded cursor-pointer">Color Theme</div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="p-4 text-sm text-muted-foreground">Select an activity from the sidebar</div>
+        );
+    }
+  };
 
   return (
     <div className="w-64 bg-sidebar border-r border-border h-full flex flex-col">
-      <div className="p-2 flex justify-between items-center border-b border-border">
-        <span className="font-medium">EXPLORER</span>
-        <Button variant="ghost" size="icon" className="h-5 w-5">
-          <ChevronDown size={16} />
-        </Button>
-      </div>
-      <div className="overflow-y-auto flex-grow">
-        <FileTree 
-          files={files} 
-          onFileSelect={onFileSelect} 
-          selectedFile={selectedFile} 
-        />
-      </div>
+      {renderSidebarContent()}
     </div>
   );
 };
