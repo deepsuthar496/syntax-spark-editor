@@ -245,8 +245,46 @@ const Monaco: React.FC<MonacoProps> = ({ content, language, onChange }) => {
   // Focus handling
   const handleEditorClick = (e: React.MouseEvent) => {
     setIsEditable(true);
+    
     if (textareaRef.current) {
       textareaRef.current.focus();
+      
+      // Calculate cursor position based on click
+      const editorRect = editorRef.current?.getBoundingClientRect();
+      if (!editorRect) return;
+      
+      const lineHeight = 24; // Approximate line height
+      const lineNumberWidth = 48; // Width of line number area
+      const charWidth = 9.6; // Approximate character width for monospace font
+      
+      // Calculate which line was clicked
+      const relativeY = e.clientY - editorRect.top;
+      const clickedLineIndex = Math.floor(relativeY / lineHeight);
+      
+      // Calculate which column was clicked
+      const relativeX = e.clientX - editorRect.left - lineNumberWidth;
+      const clickedColumn = Math.max(1, Math.floor(relativeX / charWidth));
+      
+      // Find the actual position in the text
+      const lines = localContent.split('\n');
+      if (clickedLineIndex >= lines.length) return; // Out of bounds
+      
+      let position = 0;
+      // Add lengths of all previous lines plus newline characters
+      for (let i = 0; i < clickedLineIndex; i++) {
+        position += lines[i].length + 1; // +1 for newline
+      }
+      
+      // Add columns in current line
+      const maxColumn = lines[clickedLineIndex].length;
+      position += Math.min(clickedColumn, maxColumn);
+      
+      // Set cursor position
+      textareaRef.current.selectionStart = position;
+      textareaRef.current.selectionEnd = position;
+      
+      // Update cursor visualization
+      updateCursorPosition(textareaRef.current);
     }
   };
   
@@ -268,7 +306,7 @@ const Monaco: React.FC<MonacoProps> = ({ content, language, onChange }) => {
         {/* Cursor visualization */}
         {isEditable && selection.start === selection.end && (
           <div 
-            className="absolute w-0.5 h-5 bg-white opacity-80 animate-cursor-blink"
+            className="absolute w-0.5 h-5 bg-editor-cursor opacity-80 animate-cursor-blink"
             style={{
               left: `calc(${cursorPosition.column}ch + ${cursorPosition.line > 1 ? 4 : 3}rem)`,
               top: `calc(${cursorPosition.line - 1} * 1.5rem + 0.25rem)`

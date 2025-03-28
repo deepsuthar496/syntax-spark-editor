@@ -7,6 +7,8 @@ import Monaco from './Monaco';
 import StatusBar from './StatusBar';
 import MenuBar from './MenuBar';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { FolderPlus, FilePlus, Upload } from 'lucide-react';
 
 interface FileNode {
   id: string;
@@ -25,220 +27,18 @@ interface FileTab {
   isDirty?: boolean;
 }
 
-const sampleContents: Record<string, { content: string; language: string }> = {
-  '3': { 
-    content: 
-`import React from 'react';
-import { Notifications } from '@xinternal/360-notifications'
-import injectSheet from 'react-jss'
-import zIndex from 'helpers/zindex'
-
-const styles = {
-  container: {
-    composes: 'fixed r0 t0',
-    zIndex: zIndex.notificationLevel,
-  },
-}
-
-const Notifications360Container = ({ classes }) => (
-  <div className={classes.container}>
-    <Notifications />
-  </div>
-)
-
-export default injectSheet(styles)(Notifications360Container)`, 
-    language: 'javascript' 
-  },
-  '4': { 
-    content: 
-`.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}`, 
-    language: 'css' 
-  },
-  '5': { 
-    content: 
-`import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)`, 
-    language: 'javascript' 
-  },
-  '7': { 
-    content: 
-`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VS Code Editor</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>`, 
-    language: 'html' 
-  },
-  '9': { 
-    content: 
-`{
-  "name": "vscode-clone",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "typescript": "^5.0.2",
-    "vite": "^4.3.9"
-  }
-}`, 
-    language: 'json' 
-  },
-  '10': { 
-    content: 
-`{
-  "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
-  },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
-}`, 
-    language: 'json' 
-  },
-  '11': { 
-    content: 
-`# VS Code Clone
-
-A modern VS Code clone built with React and Tailwind CSS.
-
-## Features
-
-- Syntax highlighting
-- File explorer
-- Tabs
-- Status bar
-- Activity bar
-
-## Getting Started
-
-1. Clone the repository
-2. Run \`npm install\` to install dependencies
-3. Run \`npm run dev\` to start the development server`, 
-    language: 'markdown' 
-  }
-};
-
-// Initial files structure
-const initialFiles: FileNode[] = [
-  {
-    id: '1',
-    name: 'CRA',
-    type: 'folder',
-    isOpen: true,
-    children: [
-      {
-        id: '2',
-        name: 'src',
-        type: 'folder',
-        isOpen: true,
-        children: [
-          { id: '3', name: 'Notifications360Container.js', type: 'file', language: 'javascript' },
-          { id: '4', name: 'index.css', type: 'file', language: 'css' },
-          { id: '5', name: 'main.tsx', type: 'file', language: 'typescript' },
-        ],
-      },
-      {
-        id: '6',
-        name: 'public',
-        type: 'folder',
-        children: [
-          { id: '7', name: 'index.html', type: 'file', language: 'html' },
-          { id: '8', name: 'favicon.ico', type: 'file' },
-        ],
-      },
-      { id: '9', name: 'package.json', type: 'file', language: 'json' },
-      { id: '10', name: 'tsconfig.json', type: 'file', language: 'json' },
-      { id: '11', name: 'README.md', type: 'file', language: 'markdown' },
-    ],
-  },
-  {
-    id: '12',
-    name: 'PROJECTS',
-    type: 'folder',
-    children: []
-  },
-  {
-    id: '13',
-    name: 'BOOKMARKS',
-    type: 'folder',
-    children: []
-  }
-];
-
 const EditorLayout: React.FC = () => {
   const { toast } = useToast();
   const [activeItem, setActiveItem] = useState<string>('Explorer');
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
   const [openTabs, setOpenTabs] = useState<FileTab[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
-  const [files, setFiles] = useState<FileNode[]>(initialFiles);
+  const [files, setFiles] = useState<FileNode[]>([]);
   const [findReplaceVisible, setFindReplaceVisible] = useState<boolean>(false);
   const [theme, setTheme] = useState<string>("dark");
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
   const [connected, setConnected] = useState<boolean>(true);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState<boolean>(true);
   
   // File system operations
   const handleFileSelect = (file: FileNode) => {
@@ -248,18 +48,12 @@ const EditorLayout: React.FC = () => {
       // Check if file is already open in a tab
       const existingTab = openTabs.find(tab => tab.id === file.id);
       if (!existingTab) {
-        // Get file content from our sample contents
-        const fileContent = sampleContents[file.id] || { 
-          content: `// No content available for ${file.name}`, 
-          language: file.language || 'text' 
-        };
-        
-        // Create a new tab
+        // Create new tab with empty content
         const newTab: FileTab = {
           id: file.id,
           name: file.name,
-          language: file.language,
-          content: fileContent.content,
+          language: file.language || getLanguageFromFileName(file.name),
+          content: '',
           isDirty: false
         };
         
@@ -268,9 +62,36 @@ const EditorLayout: React.FC = () => {
       
       // Set the tab as active
       setActiveTab(file.id);
+      setShowWelcomeScreen(false);
     } else if (file.type === 'folder') {
       // Toggle folder expanded state
       setFiles(prevFiles => toggleFolderOpen(prevFiles, file.id));
+    }
+  };
+  
+  // Helper to get language from file name
+  const getLanguageFromFileName = (fileName: string): string => {
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    
+    switch (extension) {
+      case 'js':
+        return 'javascript';
+      case 'jsx':
+        return 'javascript';
+      case 'ts':
+        return 'typescript';
+      case 'tsx':
+        return 'typescript';
+      case 'html':
+        return 'html';
+      case 'css':
+        return 'css';
+      case 'json':
+        return 'json';
+      case 'md':
+        return 'markdown';
+      default:
+        return 'text';
     }
   };
   
@@ -298,6 +119,7 @@ const EditorLayout: React.FC = () => {
         type: 'file',
         language: tab.language
       });
+      setShowWelcomeScreen(false);
     }
   };
   
@@ -356,6 +178,7 @@ const EditorLayout: React.FC = () => {
       } else {
         setActiveTab(null);
         setSelectedFile(null);
+        setShowWelcomeScreen(true);
       }
     }
   };
@@ -453,30 +276,34 @@ const EditorLayout: React.FC = () => {
   // Create a new file
   const handleNewFile = () => {
     // Generate a unique ID
-    const newId = `new-${Date.now()}`;
+    const newId = `file-${Date.now()}`;
+    
+    // Create new file modal to get name
+    const fileName = prompt('Enter file name', 'untitled.txt');
+    if (!fileName) return;
     
     // Create new file node
     const newFile: FileNode = {
       id: newId,
-      name: 'untitled.txt',
+      name: fileName,
       type: 'file',
-      language: 'text'
+      language: getLanguageFromFileName(fileName)
     };
     
-    // Add to root folder for simplicity
-    setFiles(prev => [{
-      id: 'new-folder',
-      name: 'New Files',
-      type: 'folder',
-      isOpen: true,
-      children: [newFile]
-    }, ...prev]);
+    // Add to root or selected folder
+    if (selectedFile && selectedFile.type === 'folder') {
+      // Add to selected folder
+      setFiles(addFileToFolder(files, selectedFile.id, newFile));
+    } else {
+      // Add to root
+      setFiles(prev => [...prev, newFile]);
+    }
     
     // Create new tab
     const newTab: FileTab = {
       id: newId,
-      name: 'untitled.txt',
-      language: 'text',
+      name: fileName,
+      language: getLanguageFromFileName(fileName),
       content: '',
       isDirty: true
     };
@@ -484,10 +311,123 @@ const EditorLayout: React.FC = () => {
     setOpenTabs(prev => [...prev, newTab]);
     setActiveTab(newId);
     setSelectedFile(newFile);
+    setShowWelcomeScreen(false);
     
     toast({
       title: 'New File Created',
-      description: 'A new file has been created',
+      description: `${fileName} has been created`,
+    });
+  };
+  
+  // Create a new folder
+  const handleNewFolder = () => {
+    // Generate a unique ID
+    const newId = `folder-${Date.now()}`;
+    
+    // Create new folder modal to get name
+    const folderName = prompt('Enter folder name', 'New Folder');
+    if (!folderName) return;
+    
+    // Create new folder node
+    const newFolder: FileNode = {
+      id: newId,
+      name: folderName,
+      type: 'folder',
+      isOpen: true,
+      children: []
+    };
+    
+    // Add to root or selected folder
+    if (selectedFile && selectedFile.type === 'folder') {
+      // Add to selected folder
+      setFiles(addFileToFolder(files, selectedFile.id, newFolder));
+    } else {
+      // Add to root
+      setFiles(prev => [...prev, newFolder]);
+    }
+    
+    toast({
+      title: 'New Folder Created',
+      description: `${folderName} has been created`,
+    });
+  };
+  
+  // Helper to add file/folder to a specific folder
+  const addFileToFolder = (fileNodes: FileNode[], folderId: string, newNode: FileNode): FileNode[] => {
+    return fileNodes.map(node => {
+      if (node.id === folderId) {
+        return { 
+          ...node, 
+          children: [...(node.children || []), newNode],
+          isOpen: true
+        };
+      }
+      if (node.children) {
+        return { ...node, children: addFileToFolder(node.children, folderId, newNode) };
+      }
+      return node;
+    });
+  };
+  
+  // Open folder (simulate file picker)
+  const handleOpenFolder = () => {
+    // This would normally use a file picker API
+    // For now, we'll just create a sample workspace
+    
+    const sampleWorkspace: FileNode[] = [
+      {
+        id: 'workspace-root',
+        name: 'My Project',
+        type: 'folder',
+        isOpen: true,
+        children: [
+          {
+            id: 'src-folder',
+            name: 'src',
+            type: 'folder',
+            isOpen: true,
+            children: [
+              {
+                id: 'app-file',
+                name: 'App.tsx',
+                type: 'file',
+                language: 'typescript'
+              },
+              {
+                id: 'index-file',
+                name: 'index.ts',
+                type: 'file',
+                language: 'typescript'
+              },
+              {
+                id: 'styles-file',
+                name: 'styles.css',
+                type: 'file',
+                language: 'css'
+              }
+            ]
+          },
+          {
+            id: 'package-json',
+            name: 'package.json',
+            type: 'file',
+            language: 'json'
+          },
+          {
+            id: 'readme-md',
+            name: 'README.md',
+            type: 'file',
+            language: 'markdown'
+          }
+        ]
+      }
+    ];
+    
+    setFiles(sampleWorkspace);
+    
+    toast({
+      title: 'Folder Opened',
+      description: 'My Project workspace has been opened',
     });
   };
   
@@ -603,32 +543,55 @@ const EditorLayout: React.FC = () => {
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 <div className="max-w-md text-center p-8">
-                  <h2 className="text-2xl font-bold mb-4">Welcome to VS Code Clone</h2>
-                  <p className="mb-6">Open a file from the explorer or create a new file to get started.</p>
-                  <div className="flex flex-col gap-2 text-left text-sm bg-muted p-4 rounded-md">
-                    <div className="flex justify-between">
-                      <span>Create a new file</span>
-                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+N</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Open a file</span>
-                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Click on file</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Save a file</span>
-                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+S</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Find in file</span>
-                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+F</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleNewFile}
-                    className="mt-6 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-                  >
-                    New File
-                  </button>
+                  {showWelcomeScreen && (
+                    <>
+                      <h2 className="text-2xl font-bold mb-4">Welcome to VS Code Clone</h2>
+                      <p className="mb-6">Start by creating a new file or opening a folder.</p>
+                      
+                      <div className="flex flex-col gap-4 mb-6">
+                        <Button 
+                          onClick={handleNewFile}
+                          className="flex items-center gap-2 w-full"
+                          variant="outline"
+                        >
+                          <FilePlus size={18} />
+                          <span>New File</span>
+                          <span className="ml-auto text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+N</span>
+                        </Button>
+                        
+                        <Button 
+                          onClick={handleNewFolder}
+                          className="flex items-center gap-2 w-full"
+                          variant="outline"
+                        >
+                          <FolderPlus size={18} />
+                          <span>New Folder</span>
+                        </Button>
+                        
+                        <Button 
+                          onClick={handleOpenFolder}
+                          className="flex items-center gap-2 w-full"
+                          variant="outline"
+                        >
+                          <Upload size={18} />
+                          <span>Open Folder</span>
+                          <span className="ml-auto text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+O</span>
+                        </Button>
+                      </div>
+                      
+                      <div className="text-left text-sm bg-muted p-4 rounded-md">
+                        <h3 className="font-medium mb-2">Keyboard Shortcuts</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          <span>New File</span>
+                          <span className="text-xs bg-secondary px-2 py-0.5 rounded justify-self-end">Ctrl+N</span>
+                          <span>Save File</span>
+                          <span className="text-xs bg-secondary px-2 py-0.5 rounded justify-self-end">Ctrl+S</span>
+                          <span>Find in File</span>
+                          <span className="text-xs bg-secondary px-2 py-0.5 rounded justify-self-end">Ctrl+F</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
