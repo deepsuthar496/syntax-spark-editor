@@ -155,7 +155,7 @@ const highlightSyntax = (code: string, language: string): React.ReactNode[] => {
     }
     
     return (
-      <div key={`line-${lineIndex}`} className="code-line hover:bg-[#1e1e1e]/40">
+      <div key={`line-${lineIndex}`} className="code-line hover:bg-[#1e1e1e]/40" data-line-number={lineIndex + 1}>
         <div className="line-number">{lineIndex + 1}</div>
         <div className="flex-1 pl-4 whitespace-pre">{tokens.length > 0 ? tokens : ' '}</div>
       </div>
@@ -165,9 +165,11 @@ const highlightSyntax = (code: string, language: string): React.ReactNode[] => {
 
 const Monaco: React.FC<MonacoProps> = ({ content, language, onChange }) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEditable, setIsEditable] = useState(false);
   const [localContent, setLocalContent] = useState(content);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
   
   // Update local content when prop changes
   useEffect(() => {
@@ -179,13 +181,32 @@ const Monaco: React.FC<MonacoProps> = ({ content, language, onChange }) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!editorRef.current || !isEditable) return;
       
+      // Tab key handling
       if (e.key === 'Tab') {
         e.preventDefault();
         
+        const textArea = textareaRef.current;
+        if (!textArea) return;
+        
+        const start = textArea.selectionStart;
+        const end = textArea.selectionEnd;
+        
         // Insert 2 spaces when Tab is pressed
-        const newContent = localContent + '  ';
+        const newContent = 
+          localContent.substring(0, start) + 
+          '  ' + 
+          localContent.substring(end);
+        
         setLocalContent(newContent);
         onChange?.(newContent);
+        
+        // Set selection after update
+        setTimeout(() => {
+          if (textArea) {
+            textArea.selectionStart = start + 2;
+            textArea.selectionEnd = start + 2;
+          }
+        }, 0);
       }
     };
     
@@ -198,31 +219,76 @@ const Monaco: React.FC<MonacoProps> = ({ content, language, onChange }) => {
     const newValue = e.target.value;
     setLocalContent(newValue);
     onChange?.(newValue);
+    
+    // Update cursor position
+    updateCursorPosition(e.target);
+  };
+  
+  const updateCursorPosition = (textarea: HTMLTextAreaElement) => {
+    const cursorPos = textarea.selectionStart;
+    const contentUpToCursor = localContent.substring(0, cursorPos);
+    const lines = contentUpToCursor.split('\n');
+    const currentLine = lines.length;
+    const currentColumn = lines[lines.length - 1].length + 1;
+    
+    setCursorPosition({
+      line: currentLine,
+      column: currentColumn
+    });
+    
+    setSelection({
+      start: textarea.selectionStart,
+      end: textarea.selectionEnd
+    });
+  };
+  
+  // Focus handling
+  const handleEditorClick = (e: React.MouseEvent) => {
+    setIsEditable(true);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
   };
   
   // Highlighted code
   const highlightedCode = highlightSyntax(localContent, language);
   
   return (
-    <div className="relative h-full w-full font-mono text-sm bg-editor-background text-editor-foreground overflow-auto focus:outline-none">
+    <div 
+      className="relative h-full w-full font-mono text-sm bg-editor-background text-editor-foreground overflow-auto focus:outline-none"
+      onClick={handleEditorClick}
+    >
       <div 
         ref={editorRef}
         className="min-h-full w-full"
-        onClick={() => setIsEditable(true)}
-        onBlur={() => setIsEditable(false)}
         tabIndex={0}
       >
         {highlightedCode}
         
-        {/* Hidden textarea for capturing keyboard input */}
-        {isEditable && (
-          <textarea
-            value={localContent}
-            onChange={handleContentChange}
-            className="absolute inset-0 opacity-0 w-full h-full resize-none"
-            autoFocus
+        {/* Cursor visualization */}
+        {isEditable && selection.start === selection.end && (
+          <div 
+            className="absolute w-0.5 h-5 bg-white opacity-80 animate-cursor-blink"
+            style={{
+              left: `calc(${cursorPosition.column}ch + ${cursorPosition.line > 1 ? 4 : 3}rem)`,
+              top: `calc(${cursorPosition.line - 1} * 1.5rem + 0.25rem)`
+            }}
           />
         )}
+        
+        {/* Hidden textarea for capturing keyboard input */}
+        <textarea
+          ref={textareaRef}
+          value={localContent}
+          onChange={handleContentChange}
+          className="absolute inset-0 opacity-0 w-full h-full resize-none outline-none"
+          autoFocus={isEditable}
+          onBlur={() => setIsEditable(false)}
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          data-gramm="false"
+        />
       </div>
     </div>
   );

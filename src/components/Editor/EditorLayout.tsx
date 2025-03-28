@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ActivityBar from './ActivityBar';
 import Sidebar from './Sidebar';
 import Tabs from './Tabs';
 import Monaco from './Monaco';
 import StatusBar from './StatusBar';
+import MenuBar from './MenuBar';
 import { useToast } from '@/hooks/use-toast';
 
 interface FileNode {
@@ -234,6 +235,10 @@ const EditorLayout: React.FC = () => {
   const [openTabs, setOpenTabs] = useState<FileTab[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [files, setFiles] = useState<FileNode[]>(initialFiles);
+  const [findReplaceVisible, setFindReplaceVisible] = useState<boolean>(false);
+  const [theme, setTheme] = useState<string>("dark");
+  const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
+  const [connected, setConnected] = useState<boolean>(true);
   
   // File system operations
   const handleFileSelect = (file: FileNode) => {
@@ -263,7 +268,23 @@ const EditorLayout: React.FC = () => {
       
       // Set the tab as active
       setActiveTab(file.id);
+    } else if (file.type === 'folder') {
+      // Toggle folder expanded state
+      setFiles(prevFiles => toggleFolderOpen(prevFiles, file.id));
     }
+  };
+  
+  // Helper function to toggle folder open/closed
+  const toggleFolderOpen = (fileNodes: FileNode[], folderId: string): FileNode[] => {
+    return fileNodes.map(node => {
+      if (node.id === folderId) {
+        return { ...node, isOpen: !node.isOpen };
+      }
+      if (node.children) {
+        return { ...node, children: toggleFolderOpen(node.children, folderId) };
+      }
+      return node;
+    });
   };
   
   const handleTabSelect = (tabId: string) => {
@@ -350,9 +371,16 @@ const EditorLayout: React.FC = () => {
           : tab
       )
     );
+    
+    // Update cursor position (simplified)
+    const lines = content.split('\n');
+    setCursorPosition({
+      line: lines.length,
+      column: lines[lines.length - 1].length + 1
+    });
   };
   
-  const handleSaveFile = (tabId: string = activeTab || '') => {
+  const handleSaveFile = useCallback((tabId: string = activeTab || '') => {
     if (!tabId) return;
     
     // Simulate saving the file
@@ -368,23 +396,157 @@ const EditorLayout: React.FC = () => {
       title: 'File saved',
       description: `Changes saved successfully.`,
     });
+  }, [activeTab, toast]);
+  
+  const handleUndo = () => {
+    toast({
+      title: 'Undo',
+      description: 'Undo operation performed',
+    });
+  };
+  
+  const handleRedo = () => {
+    toast({
+      title: 'Redo',
+      description: 'Redo operation performed',
+    });
+  };
+  
+  const handleSelectAll = () => {
+    toast({
+      title: 'Select All',
+      description: 'All text selected',
+    });
+  };
+  
+  const handleFind = () => {
+    setFindReplaceVisible(true);
+    toast({
+      title: 'Find',
+      description: 'Find panel opened',
+    });
+  };
+  
+  const handleReplace = () => {
+    setFindReplaceVisible(true);
+    toast({
+      title: 'Replace',
+      description: 'Replace panel opened',
+    });
+  };
+  
+  const handleFormat = () => {
+    toast({
+      title: 'Format Document',
+      description: 'Document formatted',
+    });
+  };
+  
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    toast({
+      title: 'Theme Changed',
+      description: `Theme changed to ${newTheme}`,
+    });
+  };
+  
+  // Create a new file
+  const handleNewFile = () => {
+    // Generate a unique ID
+    const newId = `new-${Date.now()}`;
+    
+    // Create new file node
+    const newFile: FileNode = {
+      id: newId,
+      name: 'untitled.txt',
+      type: 'file',
+      language: 'text'
+    };
+    
+    // Add to root folder for simplicity
+    setFiles(prev => [{
+      id: 'new-folder',
+      name: 'New Files',
+      type: 'folder',
+      isOpen: true,
+      children: [newFile]
+    }, ...prev]);
+    
+    // Create new tab
+    const newTab: FileTab = {
+      id: newId,
+      name: 'untitled.txt',
+      language: 'text',
+      content: '',
+      isDirty: true
+    };
+    
+    setOpenTabs(prev => [...prev, newTab]);
+    setActiveTab(newId);
+    setSelectedFile(newFile);
+    
+    toast({
+      title: 'New File Created',
+      description: 'A new file has been created',
+    });
   };
   
   // For keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Save file: Ctrl+S
-      if (e.ctrlKey && e.key === 's') {
+      // Save file: Ctrl+S or Cmd+S
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (activeTab) {
           handleSaveFile();
         }
       }
+      
+      // Find: Ctrl+F or Cmd+F
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        handleFind();
+      }
+      
+      // New File: Ctrl+N or Cmd+N
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        handleNewFile();
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab]);
+  }, [activeTab, handleSaveFile]);
+  
+  // Simulate connection status for a more realistic experience
+  useEffect(() => {
+    // Random connection drops for demo purposes
+    const connectionTimer = setInterval(() => {
+      const shouldDropConnection = Math.random() < 0.05; // 5% chance of connection drop
+      
+      if (shouldDropConnection && connected) {
+        setConnected(false);
+        
+        toast({
+          title: 'Connection Lost',
+          description: 'Connection to server lost. Attempting to reconnect...',
+          variant: 'destructive'
+        });
+        
+        // Simulate reconnection after 2-5 seconds
+        setTimeout(() => {
+          setConnected(true);
+          toast({
+            title: 'Connected',
+            description: 'Connection to server restored.',
+          });
+        }, 2000 + Math.random() * 3000);
+      }
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(connectionTimer);
+  }, [connected, toast]);
   
   // Get the content for the active tab
   const activeContent = activeTab 
@@ -397,18 +559,22 @@ const EditorLayout: React.FC = () => {
     : 'text';
   
   // Calculate editor stats
-  const currentLine = 1;
-  const currentColumn = 1;
-  const lineCount = activeContent.split('\n').length;
-  
-  // Get tab title with dirty indicator
-  const getTabTitle = () => {
-    const tab = openTabs.find(t => t.id === activeTab);
-    return tab ? (tab.isDirty ? `${tab.name} •` : tab.name) : '';
-  };
+  const lineCount = activeContent ? activeContent.split('\n').length : 0;
   
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground">
+    <div className={`h-screen flex flex-col bg-background text-foreground ${theme}`}>
+      <MenuBar 
+        onSave={handleSaveFile}
+        onFormat={handleFormat}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onSelectAll={handleSelectAll}
+        onFind={handleFind}
+        onReplace={handleReplace}
+        setTheme={handleThemeChange}
+        currentTheme={theme}
+      />
+      
       <div className="flex-1 flex">
         <ActivityBar activeItem={activeItem} setActiveItem={setActiveItem} />
         
@@ -427,7 +593,7 @@ const EditorLayout: React.FC = () => {
             onTabClose={handleTabClose}
           />
           
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden relative">
             {activeTab ? (
               <Monaco 
                 content={activeContent} 
@@ -438,38 +604,80 @@ const EditorLayout: React.FC = () => {
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 <div className="max-w-md text-center p-8">
                   <h2 className="text-2xl font-bold mb-4">Welcome to VS Code Clone</h2>
-                  <p className="mb-6">Open a file from the explorer to get started.</p>
+                  <p className="mb-6">Open a file from the explorer or create a new file to get started.</p>
                   <div className="flex flex-col gap-2 text-left text-sm bg-muted p-4 rounded-md">
+                    <div className="flex justify-between">
+                      <span>Create a new file</span>
+                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+N</span>
+                    </div>
                     <div className="flex justify-between">
                       <span>Open a file</span>
                       <span className="text-xs bg-secondary px-2 py-0.5 rounded">Click on file</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Move between tabs</span>
-                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Click on tab</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Close a tab</span>
-                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Click the x</span>
-                    </div>
-                    <div className="flex justify-between">
                       <span>Save a file</span>
                       <span className="text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+S</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>Find in file</span>
+                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">Ctrl+F</span>
+                    </div>
                   </div>
+                  <button
+                    onClick={handleNewFile}
+                    className="mt-6 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+                  >
+                    New File
+                  </button>
                 </div>
+              </div>
+            )}
+            
+            {findReplaceVisible && (
+              <div className="find-panel">
+                <input 
+                  type="text" 
+                  placeholder="Find" 
+                  className="find-input"
+                  autoFocus
+                />
+                <button 
+                  className="find-button"
+                  onClick={() => setFindReplaceVisible(false)}
+                >
+                  <span className="text-muted-foreground">×</span>
+                </button>
+                <button className="find-button">
+                  <span>↑</span>
+                </button>
+                <button className="find-button">
+                  <span>↓</span>
+                </button>
+                <label className="flex items-center gap-1 text-xs">
+                  <input type="checkbox" className="h-3 w-3" />
+                  Match Case
+                </label>
+                <label className="flex items-center gap-1 text-xs">
+                  <input type="checkbox" className="h-3 w-3" />
+                  Whole Word
+                </label>
+                <label className="flex items-center gap-1 text-xs">
+                  <input type="checkbox" className="h-3 w-3" />
+                  Regex
+                </label>
               </div>
             )}
           </div>
           
           <StatusBar 
-            language={activeLanguage || "text"}
+            language={activeLanguage}
             lineCount={lineCount}
-            currentLine={currentLine}
-            currentColumn={currentColumn}
+            currentLine={cursorPosition.line}
+            currentColumn={cursorPosition.column}
             encoding="UTF-8"
             indentation="Spaces: 2"
             eol="LF"
+            connected={connected}
           />
         </div>
       </div>
