@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { FileText, Search, GitBranch, Settings, PanelLeft } from 'lucide-react';
+import { FileText, Search, GitBranch, Settings, PanelLeft, Bot, Terminal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Tooltip, 
@@ -22,7 +21,9 @@ const ActivityBar = ({ activeItem, setActiveItem }: {
   const activityItems: ActivityBarItem[] = [
     { icon: <FileText size={24} />, name: 'Explorer', shortcut: 'Ctrl+E' },
     { icon: <Search size={24} />, name: 'Search', shortcut: 'Ctrl+Shift+F' },
+    { icon: <Bot size={24} />, name: 'AI Chat' },
     { icon: <GitBranch size={24} />, name: 'Source Control', shortcut: 'Ctrl+Shift+G' },
+    { icon: <Terminal size={24} />, name: 'Terminal', shortcut: 'Ctrl+`' },
     { icon: <Settings size={24} />, name: 'Settings', shortcut: 'Ctrl+,' },
   ];
 
