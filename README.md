@@ -1,6 +1,7 @@
 ## Project info
 
-**URL**: https://lovable.dev/projects/63e2082c-8103-49a7-a17a-063fe72a67cb
+**Lovable project URL**: https://lovable.dev/projects/63e2082c-8103-49a7-a17a-063fe72a67cb
+**Vercel**: https://syntax-spark-editor.vercel.app/
 
 # VS Code Clone 💻
 
