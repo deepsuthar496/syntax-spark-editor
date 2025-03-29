@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Menubar,
@@ -14,6 +13,7 @@ import {
   MenubarCheckboxItem,
 } from "@/components/ui/menubar";
 import { useToast } from '@/hooks/use-toast';
+import { Github } from 'lucide-react';
 
 interface MenuBarProps {
   onSave: () => void;
@@ -47,145 +47,162 @@ const MenuBar: React.FC<MenuBarProps> = ({
     });
   };
 
+  const openGithubRepo = () => {
+    window.open('https://github.com/deepsuthar496/syntax-spark-editor', '_blank');
+  };
+
   return (
-    <Menubar className="border-b border-border h-8 rounded-none px-1.5 bg-sidebar">
-      <MenubarMenu>
-        <MenubarTrigger className="text-xs">File</MenubarTrigger>
-        <MenubarContent>
-          <MenubarItem onClick={() => showFeatureNotification("New File")}>
-            New File
-            <MenubarShortcut>⌘N</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("New Folder")}>
-            New Folder
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={onSave}>
-            Save
-            <MenubarShortcut>⌘S</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("Save As")}>
-            Save As...
-            <MenubarShortcut>⇧⌘S</MenubarShortcut>
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={() => showFeatureNotification("Exit")}>
-            Exit
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
+    <Menubar className="border-b border-border h-8 rounded-none px-1.5 bg-sidebar flex">
+      <div className="flex">
+        <MenubarMenu>
+          <MenubarTrigger className="text-xs">File</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem onClick={() => showFeatureNotification("New File")}>
+              New File
+              <MenubarShortcut>⌘N</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("New Folder")}>
+              New Folder
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={onSave}>
+              Save
+              <MenubarShortcut>⌘S</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("Save As")}>
+              Save As...
+              <MenubarShortcut>⇧⌘S</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={() => showFeatureNotification("Exit")}>
+              Exit
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
 
-      <MenubarMenu>
-        <MenubarTrigger className="text-xs">Edit</MenubarTrigger>
-        <MenubarContent>
-          <MenubarItem onClick={onUndo}>
-            Undo
-            <MenubarShortcut>⌘Z</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={onRedo}>
-            Redo
-            <MenubarShortcut>⇧⌘Z</MenubarShortcut>
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={() => showFeatureNotification("Cut")}>
-            Cut
-            <MenubarShortcut>⌘X</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("Copy")}>
-            Copy
-            <MenubarShortcut>⌘C</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("Paste")}>
-            Paste
-            <MenubarShortcut>⌘V</MenubarShortcut>
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={onFind}>
-            Find
-            <MenubarShortcut>⌘F</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={onReplace}>
-            Replace
-            <MenubarShortcut>⌘H</MenubarShortcut>
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={onSelectAll}>
-            Select All
-            <MenubarShortcut>⌘A</MenubarShortcut>
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger className="text-xs">Edit</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem onClick={onUndo}>
+              Undo
+              <MenubarShortcut>⌘Z</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={onRedo}>
+              Redo
+              <MenubarShortcut>⇧⌘Z</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={() => showFeatureNotification("Cut")}>
+              Cut
+              <MenubarShortcut>⌘X</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("Copy")}>
+              Copy
+              <MenubarShortcut>⌘C</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("Paste")}>
+              Paste
+              <MenubarShortcut>⌘V</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={onFind}>
+              Find
+              <MenubarShortcut>⌘F</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={onReplace}>
+              Replace
+              <MenubarShortcut>⌘H</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={onSelectAll}>
+              Select All
+              <MenubarShortcut>⌘A</MenubarShortcut>
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
 
-      <MenubarMenu>
-        <MenubarTrigger className="text-xs">View</MenubarTrigger>
-        <MenubarContent>
-          <MenubarSub>
-            <MenubarSubTrigger>Appearance</MenubarSubTrigger>
-            <MenubarSubContent>
-              <MenubarCheckboxItem 
-                checked={currentTheme === "dark"}
-                onClick={() => setTheme("dark")}
-              >
-                Dark Theme
-              </MenubarCheckboxItem>
-              <MenubarCheckboxItem 
-                checked={currentTheme === "light"}
-                onClick={() => setTheme("light")}
-              >
-                Light Theme
-              </MenubarCheckboxItem>
-              <MenubarCheckboxItem 
-                checked={currentTheme === "system"}
-                onClick={() => setTheme("system")}
-              >
-                System Theme
-              </MenubarCheckboxItem>
-            </MenubarSubContent>
-          </MenubarSub>
-          <MenubarItem onClick={() => showFeatureNotification("Toggle Terminal")}>
-            Toggle Terminal
-            <MenubarShortcut>⌘J</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("Toggle Sidebar")}>
-            Toggle Sidebar
-            <MenubarShortcut>⌘B</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("Toggle Status Bar")}>
-            Toggle Status Bar
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger className="text-xs">View</MenubarTrigger>
+          <MenubarContent>
+            <MenubarSub>
+              <MenubarSubTrigger>Appearance</MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarCheckboxItem 
+                  checked={currentTheme === "dark"}
+                  onClick={() => setTheme("dark")}
+                >
+                  Dark Theme
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem 
+                  checked={currentTheme === "light"}
+                  onClick={() => setTheme("light")}
+                >
+                  Light Theme
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem 
+                  checked={currentTheme === "system"}
+                  onClick={() => setTheme("system")}
+                >
+                  System Theme
+                </MenubarCheckboxItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarItem onClick={() => showFeatureNotification("Toggle Terminal")}>
+              Toggle Terminal
+              <MenubarShortcut>⌘J</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("Toggle Sidebar")}>
+              Toggle Sidebar
+              <MenubarShortcut>⌘B</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("Toggle Status Bar")}>
+              Toggle Status Bar
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
 
-      <MenubarMenu>
-        <MenubarTrigger className="text-xs">Run</MenubarTrigger>
-        <MenubarContent>
-          <MenubarItem onClick={() => showFeatureNotification("Run")}>
-            Run
-            <MenubarShortcut>F5</MenubarShortcut>
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("Debug")}>
-            Debug
-            <MenubarShortcut>⇧F5</MenubarShortcut>
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={() => showFeatureNotification("Toggle Breakpoint")}>
-            Toggle Breakpoint
-            <MenubarShortcut>F9</MenubarShortcut>
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger className="text-xs">Run</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem onClick={() => showFeatureNotification("Run")}>
+              Run
+              <MenubarShortcut>F5</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("Debug")}>
+              Debug
+              <MenubarShortcut>⇧F5</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={() => showFeatureNotification("Toggle Breakpoint")}>
+              Toggle Breakpoint
+              <MenubarShortcut>F9</MenubarShortcut>
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
 
-      <MenubarMenu>
-        <MenubarTrigger className="text-xs">Help</MenubarTrigger>
-        <MenubarContent>
-          <MenubarItem onClick={() => showFeatureNotification("Documentation")}>
-            Documentation
-          </MenubarItem>
-          <MenubarItem onClick={() => showFeatureNotification("About")}>
-            About
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger className="text-xs">Help</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem onClick={() => showFeatureNotification("Documentation")}>
+              Documentation
+            </MenubarItem>
+            <MenubarItem onClick={() => showFeatureNotification("About")}>
+              About
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        
+        <div className="flex items-center">
+          <div className="h-4 w-px bg-gray-600 mx-2"></div>
+          <button 
+            className="flex items-center justify-center text-muted-foreground hover:text-white"
+            onClick={openGithubRepo}
+            title="View on GitHub"
+          >
+            <Github size={16} />
+          </button>
+        </div>
+      </div>
     </Menubar>
   );
 };
